@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR</title>
+    <style>
+        body {
+          font-family: Arial, sans-serif;
+          background-color: #f4f4f9;
+          margin: 0;
+          padding: 0;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+        }
+        .form-container {
+          background-color: white;
+          padding: 30px;
+          border-radius: 8px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          width: 500px;
+          max-width: 100%;
+        }
+        h2 {
+          text-align: center;
+          margin-bottom: 20px;
+        }
+        label {
+          display: block;
+          margin-bottom: 8px;
+          font-weight: bold;
+        }
+        input, textarea {
+          width: 100%;
+          padding: 10px;
+          margin-bottom: 15px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          box-sizing: border-box;
+        }
+        input:focus, textarea:focus {
+          border-color: #007bff;
+          outline: none;
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        button {
+          background-color: #007bff;
+          color: white;
+          padding: 12px 20px;
+          border: none;
+          border-radius: 4px;
+          width: 100%;
+          cursor: pointer;
+          font-size: 16px;
+        }
+        button:hover {
+          background-color: #0056b3;
+        }
+      </style>
+</head>
+<body>
+    <form method="POST" class="form-container">
+        <h2 class="message">Registration<br></h2>
+        <div class="form-group">
+        <label for="email">Email Address</label>
+        <input
+        type="email"
+        class="form-control"
+        id="email"
+        name="email"
+        placeholder="Enter Email Address"
+        />
+        <label for="full_name">Full Name:</label>
+        <input
+        type="full_name"
+        class="form-control"
+        id="full_name"
+        name="full_name"
+        placeholder="Enter Full Name"/>
+        </div>
+        <div class="form-group">
+        <label for="vehicle_no">Vehicle Number:</label>
+        <input
+        type="text"
+        class="form-control"
+        id="vehicle_no"
+        name="vehicle_no"
+        placeholder="Enter Vehicle Number"/>
+        </div>
+        <div class="form-group">
+        <label for="Aadhaar">Aadhaar Number:</label>
+        <input
+        type="number"
+        class="form-control"
+        id="aadhaar"
+        name="aadhaar"
+        placeholder="Enter Aadhaar Number"/>
+        </div>
+        <div class="form-group">
+        <label for="phone_no">Phone Number:</label>
+        <input
+        type="number"
+        class="form-control"
+        id="phone_no"
+        name="phone_no"
+        placeholder="Enter Phone Number"/>
+        </div>
+        <br />
+        <button type="submit" class="submit_button">Submit</button>
+        </form>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balance</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        input[type="number"] {
+            width: 60px;
+        }
+
+        input[type="checkbox"] {
+            transform: scale(1.2);
+        }
+
+        button.save {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        button.save:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+
+<body>
+
+    <table id="Table">
+        <thead>
+            <tr>
+                <th>Vehicle No</th>
+                <th>Cost</th>
+                <th>Distance (km)</th>
+                <th>Allow</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in balance %}
+            <tr>
+                <td>{{ item.vehicle_no }}</td>
+                <td class="status">{{ item.balance }}</td>
+                <td>{{ item.distance }}</td>
+                <td>
+
+                    <form method="POST" action="/allow_block/{{ item.vehicle_no }}">
+                        <input type="checkbox" name="allow" class="allow" {% if item.allow%}checked{% endif %}>
+                        <button type="submit">Save</button>
+                    </form>
+
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+<script>
+setInterval(function() {
+    location.reload();
+}, 2000); // 2000 milliseconds = 2 seconds
+</script>
+</body>
+
+</html>

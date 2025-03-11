@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sim</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+    <style>
+        body {
+            height: 100vh;
+            display: grid;
+            grid-template-columns: 75% 25%;
+        }
+
+        #map {
+            height: 100%;
+            display: flex;
+            padding: 10px;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        #aside {
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Map Container -->
+
+    <div id="map"></div>
+    <div id="aside">
+        <div style="display: flex; gap: 10px;">
+            <label for="vehicle_no">Select vehicle:</label>
+            <select name="vehicle_no" id="vehicle_no">
+                {% for vehicle in balance %}
+                <option value="{{ vehicle.vehicle_no }}" data-allow="{{ 'true' if vehicle.allow else 'false' }}">{{
+                    vehicle.vehicle_no }}</option>
+
+                {% endfor %}
+            </select>
+        </div>
+        <div id="distance">Distance traveled (Toll road): 0.00 km</div>
+        <div id="cost">Deducted cost: Rs. 0.00</div>
+        <div id="tollroad">Toll road:</div>
+        <div id="coordinates">Latitude: 0.00, Longitude: 0.00</div>
+        <button id="playPauseButton">Play</button>
+        <div id="output"></div>
+    </div>
+    <script>
+        var map = L.map('map'); // Initial map center
+        // Add OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        let routeCoordinates = [];
+        let isPaused = 'true';  // To track the paused state
+        let interval;
+        let totalDistance = 0; // Total distance traveled by the marker
+        let totalCost = 0;
+        let marker;
+
+
+
+        fetch('/tollgate')
+            .then(response => response.json())  // Parse the JSON response
+            .then(data => {
+                console.log(data);  // Log the data to ensure it's loaded correctly
+                var yellowIcon = L.icon({
+                    iconUrl: 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png', // URL to red marker icon
+                    iconSize: [32, 32],    // Size of the icon [width, height]
+                    iconAnchor: [16, 32]   // Anchor point for the marker's position
+                });
+                // Loop through each toll plaza in the JSON file
+                data.forEach(plaza => {
+                    const { name, coordinates } = plaza; // Extract the name and coordinates
+                    const [lat, lng] = coordinates; // Destructure latitude and longitude
+                    // Add a marker for each plaza with a popup showing the name
+                    L.marker([lat, lng], { icon: yellowIcon })
+                        .addTo(map)
+                        .bindPopup(`<b>${name}</b><br>Lat: ${lat}, Lng: ${lng}`);
+                });
+            })
+            .catch(error => console.error('Error fetching toll coordinates:', error));
+
+
+        function sendData(number) {
+            const distance = parseInt(number, 10) / 1000; // Convert and divide by 1000
+            const selectedVehicle = document.getElementById('vehicle_no').value;
+
+            // Check if the parsed value is a valid number
+            if (isNaN(distance)) {
+                console.error("Invalid number");
+                return;
+            }
+
+            // Send the updated distance to Flask using fetch (AJAX)
+            fetch('/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({
+                    'distance': distance,
+                    'vehicle_no': selectedVehicle
+                })
+            })
+
+        }
+
+
+        fetch('/tollroad')
+            .then(response => response.json())  // Parse the JSON file
+            .then(data => {
+                tollroadCoordinates = data.map(coord => [coord[1], coord[0]]);
+                console.log(tollroadCoordinates);
+            });
+
+        const subtractArrays = (arrA, arrB) => {
+            return arrA.filter(coordA => {
+                // Check if coordA exists in arrB
+                return !arrB.some(coordB => coordA[0] === coordB[0] && coordA[1] === coordB[1]);
+            });
+        };
+
+        fetch('/route')
+            .then(response => response.json())  // Parse the JSON file
+            .then(data => {
+                routeCoordinates = data.map(coord => [coord[1], coord[0]]);
+                var route = L.polyline(routeCoordinates, { color: 'red', weight: 4 }).addTo(map);
+                const notollCoordinates = subtractArrays(routeCoordinates, tollroadCoordinates);
+                
+                const tollgateCoordinates = [];
+                console.log(notollCoordinates);
+                map.fitBounds(route.getBounds());
+                fetch('/tollgatecordinates')
+                    .then(response => response.json())  // Parse the JSON file
+                    .then(data => {
+                        tollgateCoordinates = data.map(coord => [coord[1], coord[0]]);
+                        console.log(tollgateCoordinates);
+                    });
+                const nothing = [];
+                const temp=subtractArrays(tollgateCoordinates,nothing);
+                marker = L.circleMarker(routeCoordinates[0], {
+                    radius: 10,  // Size of the circle
+                    color: 'transparent',  // No border color
+                    fillColor: 'red',  // Fill color of the circle
+                    fillOpacity: 0.8  // Opacity of the fill
+                }).addTo(map);
+                var blueIcon = L.icon({
+                    iconUrl: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', // URL to red marker icon
+                    iconSize: [32, 32],    // Size of the icon [width, height]
+                    iconAnchor: [16, 32]   // Anchor point for the marker's position
+                });
+
+                L.marker(routeCoordinates[0], { icon: blueIcon }).addTo(map);
+
+                var redIcon = L.icon({
+                    iconUrl: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png', // URL to red marker icon
+                    iconSize: [32, 32],    // Size of the icon [width, height]
+                    iconAnchor: [16, 32]   // Anchor point for the marker's position
+                });
+
+                L.marker(routeCoordinates.at(-1), { icon: redIcon }).addTo(map);
+
+                var i = 0;
+
+                function animateMarker() {
+                    const selectElement = document.getElementById('vehicle_no');
+                    const selectedOption = selectElement.options[selectElement.selectedIndex];
+                    const allow = selectedOption.getAttribute('data-allow');
+                    let tollgateCoordinates = [
+                    [77.39473, 13.09282],
+                    [76.55887, 14.05570],
+                    [76.95412, 13.61224],
+                    [77.13158, 13.32803]
+                        ];
+                    interval = setInterval(function () {
+                        if (i < routeCoordinates.length - 1) {
+
+                            var start = routeCoordinates[i];
+                            var end = routeCoordinates[i + 1];
+                            var startLatLng = L.latLng(start);
+                            var endLatLng = L.latLng(end);
+                            
+                            
+                            
+                            // Calculate the distance between the current and next point
+                            
+                            if (!notollCoordinates.includes(end)) {
+                                var segmentDistance = startLatLng.distanceTo(endLatLng); // Distance in meters
+                                totalDistance += segmentDistance; // Add to total distance
+                                sendData(totalDistance);
+                                document.getElementById('cost').textContent = `Deducted cost: Rs. ${(totalDistance * 1.2 / 1000).toFixed(2)}`;
+                                document.getElementById('tollroad').textContent = `Toll road: Yes`;
+                                document.getElementById('distance').textContent = `Distance traveled (Toll road): ${(totalDistance / 1000).toFixed(2)} km`;
+                            }
+                            else { document.getElementById('tollroad').textContent = `Toll road: No`; }
+                            // Move the marker smoothly between the current and next coordinate
+                            marker.setLatLng([
+                                start[0] + (end[0] - start[0]) * 0.05,
+                                start[1] + (end[1] - start[1]) * 0.05
+                            ]);
+                            i++;
+                            if (allow == 'false' && tollgateCoordinates.some(coord =>
+                            coord[1] == start[0] && coord[0] == start[1])) {
+                                isPaused='stop';  
+                                document.getElementById('playPauseButton').textContent = 'Stop';  
+                                clearInterval(interval); 
+                            }
+                        } else {
+                            clearInterval(interval); // Stop the animation once the last coordinate is reached
+                        }
+                    }, 64); // Adjust the interval for smoother or faster movement
+                }
+
+                // Start the animation
+
+                document.getElementById('playPauseButton').addEventListener('click', function () {
+                    if (isPaused=='true') {
+                        // Resume animation
+                        isPaused = 'false';
+                        animateMarker();  // Restart the marker movement
+                        this.textContent = 'Pause';  // Change button text
+                    } else if (isPaused=='stop'){
+                        // Pause animation
+                        
+
+                        this.textContent = 'Stop';  
+                    }
+                    else{
+                        isPaused = 'true';
+                        clearInterval(interval);  // Stop the animation
+
+                        this.textContent = 'Play';  // Change button text
+                    }
+
+                    // Toggle button style
+                    this.classList.toggle('paused', isPaused);
+                });
+
+
+
+            })
+            .catch(error => console.error('Error loading the JSON file:', error));
+
+
+        function updateCoordinates(event) {
+            var lat = event.latlng.lat.toFixed(5);  // Get latitude and round it
+            var lng = event.latlng.lng.toFixed(5);  // Get longitude and round it
+
+            // Update the coordinates in the div
+            document.getElementById('coordinates').textContent = `Latitude: ${lat}, Longitude: ${lng}`;
+        }
+
+        // Add a 'mousemove' event listener to the map
+        map.on('mousemove', updateCoordinates);
+
+
+        const distance = marker.distanceTo(tollgateCoordinates[0]) / 1000;
+        if (distance < 1) {
+            clearInterval(interval);
+
+        }
+
+
+
+    </script>
+</body>
+
+</html>
