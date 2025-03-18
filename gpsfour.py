@@ -118,7 +118,7 @@ driver = webdriver.Chrome(service=service, options=options)
 
 
 # Load user data
-df = pd.read_csv('C:\\Users\\Hrithik Gowda D\\OneDrive\\Desktop\\gps\\Team-BIT-GEEKS_Intel-Unnati--PS-6--main\\Required data files\\user_data.csv')
+df = pd.read_csv('C:\\Users\\Hrithik Gowda D\\OneDrive\\Desktop\\gps\\Team-BIT-GEEKS_Intel-Unnati--PS-6--main\\Required data files\\user_data.csv') #For here instead of this link you copy the link which is present on your system that is "user_data.csv" and keep the double backslash"\\"
 amount_balance = df.at[df.index[df['vehicle_id'] == 1][0], 'account_balance']
 
 # Function to check if a vehicle is near a toll plaza
@@ -264,10 +264,10 @@ for point in route_coords[1:]:
 
     # Capture map image
     html = m_frame.get_root().render()
-    with open("C:\\Users\\Hrithik Gowda D\\OneDrive\\Desktop\\gps\\Team-BIT-GEEKS_Intel-Unnati--PS-6--main\\gpsfour.html", "w") as file:
+    with open("C:\\Users\\Hrithik Gowda D\\OneDrive\\Desktop\\gps\\Team-BIT-GEEKS_Intel-Unnati--PS-6--main\\gpsfour.html", "w") as file: #For here instead of this link you copy the link which is present on your system that is "gpsfour.html" and keep the double backslash"\\"
         file.write(html)
 
-    driver.get("file:///C://Users//Hrithik Gowda D//OneDrive//Desktop//gps//Team-BIT-GEEKS_Intel-Unnati--PS-6--main//gpsfour.html")
+    driver.get("file:///C://Users//Hrithik Gowda D//OneDrive//Desktop//gps//Team-BIT-GEEKS_Intel-Unnati--PS-6--main//gpsfour.html") #For here instead of this link you copy the link which is present on your system that is "gpsfour.html" and keep the double frontslash"//"
     time.sleep(7)  # Adjust as needed to ensure the map loads fully
     map_elem = driver.find_element(By.CLASS_NAME, "folium-map")
     png = map_elem.screenshot_as_png
